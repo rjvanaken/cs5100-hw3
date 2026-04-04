@@ -40,7 +40,8 @@ device = (
 )
     
 
-# Define model
+# Define models
+
 # model 1 (feed forward)
 class FeedForward (nn.Module):
     def __init__(self):
@@ -61,11 +62,33 @@ class FeedForward (nn.Module):
       x = self.flatten(x)
       logits = self.stack(x)
       return logits
+    
+
+
+# model 2 (feed forward with Tanh)
+class FeedForwardTanh (nn.Module): # if I change this up enough may need to rename
+    def __init__(self):
+        super().__init__()
+        self.flatten = nn.Flatten()
+        self.stack = nn.Sequential (
+            nn.Linear(32*32*3, 256),
+            nn.Tanh(),
+            nn.Linear(256, 128), # alter
+            nn.Tanh(),
+            nn.Linear(128, 64), # alter
+            nn.Tanh(),
+            nn.Linear(64, 10) #alter
+
+        )
+
+    def forward(self, x):
+      x = self.flatten(x)
+      logits = self.stack(x)
+      return logits
 
 
 
-# Define model
-# model 2 (convolutional layers)
+# model 3 (convolutional layers)
 class ConvolutionalNetwork (nn.Module):
     def __init__(self):
         super().__init__()
