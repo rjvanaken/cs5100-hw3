@@ -7,31 +7,27 @@ from torchvision.transforms import ToTensor
 
 
 
+# download training data
+training_data = datasets.CIFAR10(
+    root="data",
+    train=True,
+    download=True,
+    transform=ToTensor()
+)
 
+# download test data
+test_data = datasets.CIFAR10(
+    root="data",
+    train=False,
+    download=True,
+    transform=ToTensor()
+)
 
-def main():
+batch_size = 64
 
-    # download training data
-    training_data = datasets.CIFAR10(
-        root="data",
-        train=True,
-        download=True,
-        transform=ToTensor()
-    )
-    
-    # download test data
-    test_data = datasets.CIFAR10(
-        root="data",
-        train=False,
-        download=True,
-        transform=ToTensor()
-    )
-
-    batch_size = 64
-
-    # create data loaders
-    train_dataloader = DataLoader(training_data, batch_size=batch_size)
-    test_dataloader = DataLoader(test_data, batch_size=batch_size)
+# create data loaders
+train_dataloader = DataLoader(training_data, batch_size=batch_size)
+test_dataloader = DataLoader(test_data, batch_size=batch_size)
 
 
 # set device for training
@@ -44,10 +40,13 @@ device = (
 )
     
 
+# Define model
+class NeuralNetwork(nn.Module):
+    def __init__(self):
+        super().__init__()
 
-if __name__ == "__main__":
-    main()
 
+# continue...
 
 
 
