@@ -4,8 +4,10 @@ from torch import nn
 from torch.utils.data import DataLoader
 import torchvision.datasets as datasets
 from torchvision.transforms import ToTensor
+from config import *
 
-
+# local constant
+LOSS_FN = nn.CrossEntropyLoss()
 
 # download training data
 training_data = datasets.CIFAR10(
@@ -23,7 +25,7 @@ test_data = datasets.CIFAR10(
     transform=ToTensor()
 )
 
-batch_size = 64
+batch_size = BATCH_SIZE
 
 # create data loaders
 train_dataloader = DataLoader(training_data, batch_size=batch_size)
@@ -152,23 +154,35 @@ def test(dataloader, model, loss_fn):
             correct += (pred.argmax(1) == y).type(torch.float).sum().item()
         
         accuracy = correct / size
-        print(f"accuracy: {accuracy}\n")
+        total_loss = test_loss / num_batches
+
+        return (accuracy, total_loss)
+
+
+
+
+
 
 # RUN
 # ------------------
 # model 1
 
-#constants 
-LOSS_FN = nn.CrossEntropyLoss()
-EPOCHS = 35
+def run(model, lr=DEFAULT_LR, epochs=DEFAULT_EPOCHS):
+    optimizer = torch.optim.SGD(model.parameters(), lr)
 
-def run(model):
-    optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
-
-    for t in range(EPOCHS):
+    prev_loss = 10000000
+    for t in range(epochs):
         print(f"Epoch {t+1}\n-------------------------------")
         train(train_dataloader, model, LOSS_FN, optimizer)
-        test(test_dataloader, model, LOSS_FN)
+        accuracy, total_loss = test(test_dataloader, model, LOSS_FN)
+
+        if total_loss > prev_loss:
+            print("\n Loss increased, terminating early")
+            break
+
+        print(f"\naccuracy: {accuracy}")
+        print(f"total avg loss: {total_loss}\n")
+        prev_loss = total_loss
     print("Done!")
 
 
