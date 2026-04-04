@@ -42,27 +42,47 @@ device = (
 
 # Define model
 # model 1 (feed forward)
-class NeuralNetworkFF (nn.Module):
+class FeedForward (nn.Module):
     def __init__(self):
         super().__init__()
         self.flatten = nn.Flatten()
-        self.linear_relu_stack = nn.Sequential (
+        self.stack = nn.Sequential (
             nn.Linear(32*32*3, 256),
             nn.ReLU(),
-            nn.Linear(256, 128),
+            nn.Linear(256, 128), # alter
             nn.ReLU(),
-            nn.Linear(128, 64),
+            nn.Linear(128, 64), # alter
             nn.ReLU(),
-            nn.Linear(64, 10)
+            nn.Linear(64, 10) #alter
 
         )
 
     def forward(self, x):
       x = self.flatten(x)
-      logits = self.linear_relu_stack(x)
+      logits = self.stack(x)
       return logits
 
 
+
+# Define model
+# model 2 (convolutional layers)
+class ConvolutionalNetwork (nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.stack = nn.Sequential (
+            nn.Conv2d(),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(),
+            nn.ReLU(),
+            nn.Flatten(),
+            nn.Linear(64, 10) # alter
+
+        )
+
+    def forward(self, x):
+        logits = self.stack(x)
+        return logits
 
 
 
