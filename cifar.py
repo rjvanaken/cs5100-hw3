@@ -5,6 +5,9 @@ from torch.utils.data import DataLoader
 import torchvision.datasets as datasets
 from torchvision.transforms import ToTensor
 from config import *
+import warnings
+
+warnings.filterwarnings("ignore")
 
 # local constant
 LOSS_FN = nn.CrossEntropyLoss()
@@ -94,13 +97,14 @@ class ConvolutionalNetwork (nn.Module):
     def __init__(self):
         super().__init__()
         self.stack = nn.Sequential (
-            nn.Conv2d(),
+            nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, padding=1),
             nn.ReLU(),
             nn.MaxPool2d(2),
-            nn.Conv2d(),
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1),
             nn.ReLU(),
+            nn.MaxPool2d(2),
             nn.Flatten(),
-            nn.Linear(64, 10) # alter
+            nn.Linear(64 * 8 * 8, 10) # alter
 
         )
 
@@ -111,7 +115,7 @@ class ConvolutionalNetwork (nn.Module):
 
 model_ff = FeedForward().to(device)
 model_fft = FeedForwardTanh().to(device)
-model_cnn = FeedForwardTanh().to(device)
+model_cnn = ConvolutionalNetwork().to(device)
 
 
 
@@ -168,7 +172,7 @@ def test(dataloader, model, loss_fn):
 # model 1
 
 def run(model, lr=DEFAULT_LR, epochs=DEFAULT_EPOCHS):
-    optimizer = torch.optim.SGD(model.parameters(), lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr)
 
     prev_loss = 10000000
     for t in range(epochs):
@@ -177,6 +181,7 @@ def run(model, lr=DEFAULT_LR, epochs=DEFAULT_EPOCHS):
         accuracy, total_loss = test(test_dataloader, model, LOSS_FN)
 
         if total_loss > prev_loss:
+            print(f"total loss: {total_loss}, previous: {prev_loss}")
             print("\n Loss increased, terminating early")
             break
 
@@ -188,9 +193,9 @@ def run(model, lr=DEFAULT_LR, epochs=DEFAULT_EPOCHS):
 
 
 def main():
-    run(model_ff)
-    # run(model_fft)
-    # run(model_cnn)
+    # run(model_ff, epochs=40)
+    # run(model_fft, epochs=25)
+    run(model_cnn, epochs=50)
 
 
 
