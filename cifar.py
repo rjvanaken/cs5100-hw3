@@ -5,6 +5,7 @@ from torch.utils.data import DataLoader
 import torchvision.datasets as datasets
 from torchvision.transforms import ToTensor
 from config import *
+import matplotlib.pyplot as plt
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -171,32 +172,56 @@ def test(dataloader, model, loss_fn):
 # ------------------
 # model 1
 
-def run(model, lr=DEFAULT_LR, epochs=DEFAULT_EPOCHS):
-    optimizer = torch.optim.Adam(model.parameters(), lr)
+def run(model, title, lr=DEFAULT_LR, epochs=DEFAULT_EPOCHS):
+    
+    print("-" * 33)
+    print(title.upper())
+    print(f"{"-" * 33}\n")
 
-    prev_loss = 10000000
+    optimizer = torch.optim.Adam(model.parameters(), lr)
+    losses = []
     for t in range(epochs):
-        print(f"Epoch {t+1}\n-------------------------------")
+        print(f"Epoch {t+1}\n{"-" * 33}")
         train(train_dataloader, model, LOSS_FN, optimizer)
         accuracy, total_loss = test(test_dataloader, model, LOSS_FN)
 
-        if total_loss > prev_loss:
-            print(f"total loss: {total_loss}, previous: {prev_loss}")
-            print("\n Loss increased, terminating early")
-            break
+        if losses:
+            if total_loss > losses[-1]:
+                print("\n Loss increased, terminating early")
+                break
+        
 
+        losses.append(total_loss)
         print(f"\naccuracy: {accuracy}")
-        print(f"total avg loss: {total_loss}\n")
-        prev_loss = total_loss
-    print("Done!")
+        print(f"total avg loss: {total_loss}\n\n")
+        
+    return losses
+
+
+def plotLossGraph(losses, plot_title, filename):
+    plt.clf()
+    plt.title(plot_title)
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.plot(losses, 'o-r')
+    plt.savefig(filename)
 
 
 
 def main():
-    # run(model_ff, epochs=40)
-    # run(model_fft, epochs=25)
-    run(model_cnn, epochs=50)
+    ff = "Feed Forward"
+    fft = "Feed Forward with Tanh"
+    cnn = "Convolutional Network"
 
+    # default epochs and learning rate
+    ff_losses = run(model_ff, ff)
+    fft_losses = run(model_fft, fft)
+    cnn_losses = run(model_cnn, cnn)
+    
+    plotLossGraph(ff_losses, ff, "ff_loss.png")
+    plotLossGraph(fft_losses, fft, "fft_loss.png")
+    plotLossGraph(cnn_losses, cnn, "cnn_loss.png")
+    
 
 
 
