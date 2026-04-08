@@ -76,13 +76,13 @@ class FeedForwardTanh (nn.Module): # if I change this up enough may need to rena
         super().__init__()
         self.flatten = nn.Flatten()
         self.stack = nn.Sequential (
-            nn.Linear(32*32*3, 256),
+            nn.Linear(32*32*3, 512),
+            nn.Tanh(),
+            nn.Linear(512, 256), # alter
             nn.Tanh(),
             nn.Linear(256, 128), # alter
             nn.Tanh(),
-            nn.Linear(128, 64), # alter
-            nn.Tanh(),
-            nn.Linear(64, 10) #alter
+            nn.Linear(128, 10) #alter
 
         )
 
@@ -183,7 +183,7 @@ def run(model, title, lr=DEFAULT_LR, epochs=DEFAULT_EPOCHS):
     for t in range(epochs):
         print(f"Epoch {t+1}\n{"-" * 33}")
         train(train_dataloader, model, LOSS_FN, optimizer)
-        accuracy, total_loss = test(test_dataloader, model, LOSS_FN)
+        accuracy, total_loss = test(train_dataloader, model, LOSS_FN)
 
         if losses:
             if total_loss > losses[-1]:
@@ -194,6 +194,7 @@ def run(model, title, lr=DEFAULT_LR, epochs=DEFAULT_EPOCHS):
         losses.append(total_loss)
         print(f"\naccuracy: {accuracy}")
         print(f"total avg loss: {total_loss}\n\n")
+    torch.save(model.state_dict(), f"{title}.pth")
         
     return losses
 
@@ -205,6 +206,37 @@ def plotLossGraph(losses, plot_title, filename):
     plt.ylabel('Loss')
     plt.plot(losses, 'o-r')
     plt.savefig(filename)
+
+
+def plotExampleImage(image, abrev, example_type):
+    img, true_label, pred_label = image
+    plt.imshow(img.cpu().permute(1, 2, 0))
+    plt.title(f"True: {training_data.classes[true_label]}, Predicted: {training_data.classes[pred_label]}")
+    plt.axis('off')
+    plt.savefig(f"{abrev}_{example_type}.png")
+    plt.clf()
+
+
+def find_examples(dataloader, model, abrev):
+    model.eval()
+    correct_img, incorrect_img = None, None
+    with torch.no_grad():
+        for X, y in dataloader:
+            X, y = X.to(device), y.to(device)
+            pred = model(X).argmax(1)
+            for i in range(len(X)):
+                if correct_img is None and pred[i] == y[i]:
+                    correct_img = (X[i], y[i], pred[i])
+                if incorrect_img is None and pred[i] != y[i]:
+                    incorrect_img = (X[i], y[i], pred[i])
+                if correct_img and incorrect_img:
+                    plotExampleImage(correct_img, abrev, "correct")
+                    plotExampleImage(incorrect_img, abrev, "incorrect")
+                    return
+                
+
+                
+
 
 
 
@@ -221,6 +253,15 @@ def main():
     plotLossGraph(ff_losses, ff, "ff_loss.png")
     plotLossGraph(fft_losses, fft, "fft_loss.png")
     plotLossGraph(cnn_losses, cnn, "cnn_loss.png")
+
+
+    print ("FINAL TEST RESULTS - ACCURACY BY MODEL:")
+    for model, title, abrev in [(model_ff, ff, "ff"), (model_fft, fft, "fft"), (model_cnn, cnn, "cnn")]:
+        accuracy, total_loss = test(test_dataloader, model, LOSS_FN)
+
+        print(f"{title}: {(accuracy * 100):.2f}%")
+        find_examples(test_dataloader, model, abrev)
+
     
 
 
