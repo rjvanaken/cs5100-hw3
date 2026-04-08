@@ -209,12 +209,12 @@ def plotLossGraph(losses, plot_title, filename):
 
 
 def plotExampleImage(image, abrev, example_type):
+    plt.clf()
     img, true_label, pred_label = image
     plt.imshow(img.cpu().permute(1, 2, 0))
     plt.title(f"True: {training_data.classes[true_label]}, Predicted: {training_data.classes[pred_label]}")
     plt.axis('off')
     plt.savefig(f"{abrev}_{example_type}.png")
-    plt.clf()
 
 
 def find_examples(dataloader, model, abrev):
