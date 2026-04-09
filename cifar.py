@@ -4,14 +4,17 @@ from torch import nn
 from torch.utils.data import DataLoader
 import torchvision.datasets as datasets
 from torchvision.transforms import ToTensor
-from config import *
 import matplotlib.pyplot as plt
 import warnings
 
 warnings.filterwarnings("ignore")
 
-# local constant
+# constants
+BATCH_SIZE = 64
+DEFAULT_EPOCHS = 100
+DEFAULT_LR = 1e-4
 LOSS_FN = nn.CrossEntropyLoss()
+
 
 # download training data
 training_data = datasets.CIFAR10(
@@ -168,9 +171,6 @@ def test(dataloader, model, loss_fn):
 
 
 
-# RUN
-# ------------------
-# model 1
 
 def run(model, title, lr=DEFAULT_LR, epochs=DEFAULT_EPOCHS):
     
@@ -208,16 +208,17 @@ def plotLossGraph(losses, plot_title, filename):
     plt.savefig(filename)
 
 
-def plotExampleImage(image, abrev, example_type):
+def plotExampleImage(image, abrev, example_type, title):
     plt.clf()
     img, true_label, pred_label = image
     plt.imshow(img.cpu().permute(1, 2, 0))
-    plt.title(f"True: {training_data.classes[true_label]}, Predicted: {training_data.classes[pred_label]}")
-    plt.axis('off')
+    plt.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
+    plt.title(title)
+    plt.xlabel(f"True: {training_data.classes[true_label]}, Predicted: {training_data.classes[pred_label]}", fontsize=12)
     plt.savefig(f"{abrev}_{example_type}.png")
 
 
-def find_examples(dataloader, model, abrev):
+def find_examples(dataloader, model, abrev, title):
     model.eval()
     correct_img, incorrect_img = None, None
     with torch.no_grad():
@@ -230,14 +231,12 @@ def find_examples(dataloader, model, abrev):
                 if incorrect_img is None and pred[i] != y[i]:
                     incorrect_img = (X[i], y[i], pred[i])
                 if correct_img and incorrect_img:
-                    plotExampleImage(correct_img, abrev, "correct")
-                    plotExampleImage(incorrect_img, abrev, "incorrect")
+                    plotExampleImage(correct_img, abrev, "correct", title)
+                    plotExampleImage(incorrect_img, abrev, "incorrect", title)
                     return
                 
 
-                
-
-
+              
 
 
 def main():
@@ -245,7 +244,7 @@ def main():
     fft = "Feed Forward with Tanh"
     cnn = "Convolutional Network"
 
-    # default epochs and learning rate
+
     ff_losses = run(model_ff, ff)
     fft_losses = run(model_fft, fft)
     cnn_losses = run(model_cnn, cnn)
@@ -260,16 +259,11 @@ def main():
         accuracy, total_loss = test(test_dataloader, model, LOSS_FN)
 
         print(f"{title}: {(accuracy * 100):.2f}%")
-        find_examples(test_dataloader, model, abrev)
-
-    
-
-
+        find_examples(test_dataloader, model, abrev, title)
 
 
 if __name__ == "__main__":
     main()
-
 
 
 
